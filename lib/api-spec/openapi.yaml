@@ -1,0 +1,436 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: DataWave API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: datasets
+  - name: articles
+  - name: likes
+  - name: admin
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /summary:
+    get:
+      operationId: getSummary
+      tags: [datasets]
+      summary: Site-wide summary stats
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteSummary"
+
+  /datasets:
+    get:
+      operationId: listDatasets
+      tags: [datasets]
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: tag
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DatasetSummary" }
+    post:
+      operationId: createDataset
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DatasetInput" }
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dataset" }
+
+  /datasets/{slug}:
+    get:
+      operationId: getDataset
+      tags: [datasets]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dataset" }
+        "404":
+          description: Not found
+
+  /datasets/id/{id}:
+    put:
+      operationId: updateDataset
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DatasetInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dataset" }
+    delete:
+      operationId: deleteDataset
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /articles:
+    get:
+      operationId: listArticles
+      tags: [articles]
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: tag
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ArticleSummary" }
+    post:
+      operationId: createArticle
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ArticleInput" }
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Article" }
+
+  /articles/{slug}:
+    get:
+      operationId: getArticle
+      tags: [articles]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Article" }
+
+  /articles/id/{id}:
+    put:
+      operationId: updateArticle
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ArticleInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Article" }
+    delete:
+      operationId: deleteArticle
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /likes:
+    post:
+      operationId: toggleLike
+      tags: [likes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LikeInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LikeResult" }
+
+  /likes/status:
+    get:
+      operationId: getLikeStatus
+      tags: [likes]
+      parameters:
+        - in: query
+          name: targetType
+          required: true
+          schema: { type: string }
+        - in: query
+          name: targetId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: fingerprint
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LikeResult" }
+
+  /tags:
+    get:
+      operationId: listTags
+      tags: [datasets]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TagCount"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+        "401":
+          description: Invalid
+
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /admin/me:
+    get:
+      operationId: adminMe
+      tags: [admin]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminSession" }
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status: { type: string }
+      required: [status]
+    OkResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+      required: [ok]
+    AdminSession:
+      type: object
+      properties:
+        authenticated: { type: boolean }
+      required: [authenticated]
+    SiteSummary:
+      type: object
+      properties:
+        totalDatasets: { type: integer }
+        totalArticles: { type: integer }
+        totalLikes: { type: integer }
+        topTags:
+          type: array
+          items: { $ref: "#/components/schemas/TagCount" }
+      required: [totalDatasets, totalArticles, totalLikes, topTags]
+    TagCount:
+      type: object
+      properties:
+        tag: { type: string }
+        count: { type: integer }
+      required: [tag, count]
+    DatasetSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        shortDescription: { type: string }
+        chartType: { type: string }
+        tags: { type: array, items: { type: string } }
+        likeCount: { type: integer }
+        createdAt: { type: string }
+      required: [id, slug, title, shortDescription, chartType, tags, likeCount, createdAt]
+    Dataset:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        shortDescription: { type: string }
+        longDescriptionHtml: { type: string }
+        chartType: { type: string }
+        tags: { type: array, items: { type: string } }
+        data: {}
+        metaDescription: { type: string }
+        likeCount: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [id, slug, title, shortDescription, longDescriptionHtml, chartType, tags, data, metaDescription, likeCount, createdAt, updatedAt]
+    DatasetInput:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        shortDescription: { type: string }
+        longDescriptionHtml: { type: string }
+        chartType: { type: string }
+        tags: { type: array, items: { type: string } }
+        data: {}
+        metaDescription: { type: string }
+      required: [slug, title, shortDescription, chartType, tags, data]
+    ArticleSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        excerpt: { type: string }
+        coverImage: { type: string }
+        tags: { type: array, items: { type: string } }
+        likeCount: { type: integer }
+        createdAt: { type: string }
+      required: [id, slug, title, excerpt, coverImage, tags, likeCount, createdAt]
+    Article:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        excerpt: { type: string }
+        contentHtml: { type: string }
+        coverImage: { type: string }
+        tags: { type: array, items: { type: string } }
+        metaDescription: { type: string }
+        likeCount: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [id, slug, title, excerpt, contentHtml, coverImage, tags, metaDescription, likeCount, createdAt, updatedAt]
+    ArticleInput:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        excerpt: { type: string }
+        contentHtml: { type: string }
+        coverImage: { type: string }
+        tags: { type: array, items: { type: string } }
+        metaDescription: { type: string }
+      required: [slug, title, excerpt, contentHtml, tags]
+    LikeInput:
+      type: object
+      properties:
+        targetType: { type: string }
+        targetId: { type: integer }
+        fingerprint: { type: string }
+      required: [targetType, targetId, fingerprint]
+    LikeResult:
+      type: object
+      properties:
+        liked: { type: boolean }
+        likeCount: { type: integer }
+      required: [liked, likeCount]
